@@ -1,51 +1,23 @@
 """
-Text-to-Speech engine using Coqui TTS with voice cloning
+Text-to-Speech engine using mlx-audio with voice cloning
 """
 
 import os
 import sys
-
-# Set environment variables BEFORE importing torch
-os.environ['COQUI_TOS_AGREED'] = '1'
-
 from pathlib import Path
-from TTS.api import TTS
 import tempfile
 import soundfile as sf
-import numpy as np
-from contextlib import contextmanager
-
-
-@contextmanager
-def suppress_stdout():
-    """Context manager to suppress stdout output"""
-    with open(os.devnull, 'w') as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
+from mlx_audio.tts.generate import generate_audio
 
 
 class TTSEngine:
-    """Handles text-to-speech generation using Coqui TTS with voice cloning"""
+    """Handles text-to-speech generation using mlx-audio CSM with voice cloning"""
 
     def __init__(self):
-        # Initialize with XTTS-v2 which supports voice cloning
-        self.tts = None
+        # Initialize with CSM-1B model for voice cloning (optimized for Apple Silicon)
         self.reference_audio = None
-        self.model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
-        # XTTS-v2 MPS support is unreliable, stick with CPU for stability
-        self.device = "cpu"
-
-    def _get_tts(self):
-        """Lazy initialization of TTS engine"""
-        if self.tts is None:
-            print("Loading XTTS-v2 model on CPU...", file=sys.stderr, flush=True)
-            with suppress_stdout():
-                self.tts = TTS(self.model_name, progress_bar=False, gpu=False)
-        return self.tts
+        self.model_name = "mlx-community/csm-1b"
+        print("Using mlx-audio CSM-1B model (Apple Silicon optimized)", file=sys.stderr, flush=True)
 
     def set_reference_audio(self, audio_data: dict):
         """
@@ -60,7 +32,7 @@ class TTSEngine:
             temp_ref = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
             sf.write(temp_ref.name, audio_data['array'], audio_data['sampling_rate'])
             self.reference_audio = temp_ref.name
-            print(f"Reference audio set: {self.reference_audio}", flush=True)
+            print(f"Reference audio set: {self.reference_audio}", file=sys.stderr, flush=True)
 
     async def generate_speech(self, text: str, output_path: str, reference_audio_data: dict = None) -> str:
         """
@@ -82,29 +54,23 @@ class TTSEngine:
         if reference_audio_data:
             self.set_reference_audio(reference_audio_data)
 
-        # Get the TTS engine
-        tts = self._get_tts()
-
-        # Generate speech with voice cloning
-        with suppress_stdout():
-            if self.reference_audio:
-                print(f"Generating speech with Elise voice cloning...", file=sys.stderr, flush=True)
-                tts.tts_to_file(
-                    text=text,
-                    file_path=str(output_file),
-                    speaker_wav=self.reference_audio,
-                    language="en"
-                )
-            else:
-                # Use built-in speaker when no reference audio is provided
-                print(f"Generating speech with built-in speaker...", file=sys.stderr, flush=True)
-                # XTTS-v2 has several built-in speakers, using "Claribel Dervla" as default
-                tts.tts_to_file(
-                    text=text,
-                    file_path=str(output_file),
-                    speaker="Claribel Dervla",
-                    language="en"
-                )
+        # Generate speech with mlx-audio
+        if self.reference_audio:
+            print(f"Generating speech with Elise voice cloning (mlx-audio)...", file=sys.stderr, flush=True)
+            generate_audio(
+                text=text,
+                model_path=self.model_name,
+                ref_audio=self.reference_audio,
+                output_path=str(output_file)
+            )
+        else:
+            # Without reference audio, use default CSM voice
+            print(f"Generating speech with default CSM voice...", file=sys.stderr, flush=True)
+            generate_audio(
+                text=text,
+                model_path=self.model_name,
+                output_path=str(output_file)
+            )
 
         return str(output_file)
 
@@ -117,6 +83,7 @@ class TTSEngine:
         """
         return {
             "model_name": self.model_name,
+            "framework": "mlx-audio (Apple Silicon optimized)",
             "supports_voice_cloning": True,
             "has_reference_audio": self.reference_audio is not None
         }

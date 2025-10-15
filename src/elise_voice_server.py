@@ -118,9 +118,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         output_path = output_dir / f"{filename}.wav"
 
         try:
-            # Generate speech (voice cloning disabled for now due to audio decoding issues)
-            # TODO: Re-enable voice cloning once torchcodec/ffmpeg linking is resolved
-            await tts_engine.generate_speech(text, str(output_path), reference_audio_data=None)
+            # Generate speech with Elise voice cloning using mlx-audio
+            # Get a reference audio sample from the dataset
+            reference_audio = dataset.get_audio_sample()
+            await tts_engine.generate_speech(text, str(output_path), reference_audio_data=reference_audio)
 
             # Play audio if requested
             if play:
