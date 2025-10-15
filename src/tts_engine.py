@@ -7,6 +7,7 @@ import sys
 import shutil
 from pathlib import Path
 import tempfile
+from contextlib import redirect_stdout, redirect_stderr
 import soundfile as sf
 from mlx_audio.tts.generate import generate_audio
 
@@ -63,17 +64,21 @@ class TTSEngine:
         output_dir = output_file.parent.resolve()  # Get absolute path
         filename_without_ext = output_file.stem
 
-        generate_audio(
-            text=text,
-            model_path=self.model_name,
-            voice=self.voice,
-            lang_code="a",  # American English
-            file_prefix=filename_without_ext,
-            output_path=".",  # mlx-audio has a bug and ignores this, always uses cwd
-            audio_format="wav",
-            sample_rate=24000,
-            verbose=False
-        )
+        # Suppress mlx-audio's stdout output (it prints colored text even with verbose=False)
+        # This breaks MCP JSON protocol, so we redirect to /dev/null
+        with open(os.devnull, 'w') as devnull:
+            with redirect_stdout(devnull):
+                generate_audio(
+                    text=text,
+                    model_path=self.model_name,
+                    voice=self.voice,
+                    lang_code="a",  # American English
+                    file_prefix=filename_without_ext,
+                    output_path=".",  # mlx-audio has a bug and ignores this, always uses cwd
+                    audio_format="wav",
+                    sample_rate=24000,
+                    verbose=False
+                )
 
         # mlx-audio automatically appends _000 to the filename and saves in cwd
         # We need to move it to the desired location
