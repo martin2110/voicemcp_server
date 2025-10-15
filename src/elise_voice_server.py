@@ -124,17 +124,20 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
             # Play audio if requested
             if play:
-                # Use async subprocess to avoid blocking the event loop
-                # This prevents timeouts while still playing sequentially
-                process = await asyncio.create_subprocess_exec('afplay', actual_path)
-                await process.wait()
-                status = "Speech generated and played!"
+                # actual_path may contain multiple files (comma-separated) for long text
+                audio_files = actual_path.split(',')
+                for audio_file in audio_files:
+                    # Use async subprocess to avoid blocking the event loop
+                    # This prevents timeouts while still playing sequentially
+                    process = await asyncio.create_subprocess_exec('afplay', audio_file)
+                    await process.wait()
+                status = f"Speech generated and played! ({len(audio_files)} file(s))"
             else:
                 status = "Speech generated successfully!"
 
             return [TextContent(
                 type="text",
-                text=f"{status}\n\nOutput file: {actual_path}\n\nText: {text}"
+                text=f"{status}\n\nOutput file(s): {actual_path}\n\nText: {text}"
             )]
         except Exception as e:
             return [TextContent(

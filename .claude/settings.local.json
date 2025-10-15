@@ -9,7 +9,8 @@
       "Bash(venv/bin/python:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(/bin/ls:*)"
+      "Bash(/bin/ls:*)",
+      "Bash(soxi:*)"
     ],
     "deny": [],
     "ask": []

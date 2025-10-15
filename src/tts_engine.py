@@ -91,9 +91,16 @@ class TTSEngine:
             # Always restore original working directory
             os.chdir(original_cwd)
 
-        # mlx-audio automatically appends _000 to the filename
-        actual_output = output_dir / f"{filename_without_ext}_000.wav"
-        return str(actual_output)
+        # mlx-audio automatically appends _000, _001, etc. for long text
+        # Find all generated files
+        import glob
+        generated_files = sorted(glob.glob(str(output_dir / f"{filename_without_ext}_*.wav")))
+
+        if not generated_files:
+            raise FileNotFoundError(f"No audio files generated for {filename_without_ext}")
+
+        # Return list of all generated files (comma-separated)
+        return ",".join(generated_files)
 
     def get_model_info(self) -> dict:
         """
