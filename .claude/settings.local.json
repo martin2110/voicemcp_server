@@ -6,7 +6,9 @@
       "Bash(source:*)",
       "Bash(pip install:*)",
       "Bash(python:*)",
-      "Bash(venv/bin/python:*)"
+      "Bash(venv/bin/python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

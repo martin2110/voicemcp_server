@@ -57,11 +57,21 @@ class TTSEngine:
 
         # Generate speech with mlx-audio Kokoro
         print(f"Generating speech with Kokoro voice '{self.voice}'...", file=sys.stderr, flush=True)
+
+        # Extract directory and filename
+        output_dir = output_file.parent
+        filename_without_ext = output_file.stem
+
         generate_audio(
             text=text,
             model_path=self.model_name,
             voice=self.voice,
-            output_path=str(output_file)
+            lang_code="a",  # American English
+            file_prefix=filename_without_ext,
+            output_path=str(output_dir),
+            audio_format="wav",
+            sample_rate=24000,
+            verbose=False
         )
 
         return str(output_file)
