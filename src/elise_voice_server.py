@@ -131,6 +131,8 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     # This prevents timeouts while still playing sequentially
                     process = await asyncio.create_subprocess_exec('afplay', audio_file)
                     await process.wait()
+                    # Delete the file after playing
+                    Path(audio_file).unlink()
                 status = f"Speech generated and played! ({len(audio_files)} file(s))"
             else:
                 status = "Speech generated successfully!"
