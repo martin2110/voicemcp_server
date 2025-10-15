@@ -124,8 +124,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
             # Play audio if requested
             if play:
-                subprocess.Popen(['afplay', actual_path])
-                status = "Speech generated and playing!"
+                # Use run() instead of Popen() to wait for playback to finish
+                # This prevents multiple audio files from playing simultaneously
+                subprocess.run(['afplay', actual_path])
+                status = "Speech generated and played!"
             else:
                 status = "Speech generated successfully!"
 
