@@ -120,18 +120,18 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             # Generate speech using default CSM voice
             # TODO: Re-enable voice cloning once we solve audio loading without torchcodec
-            await tts_engine.generate_speech(text, str(output_path), reference_audio_data=None)
+            actual_path = await tts_engine.generate_speech(text, str(output_path), reference_audio_data=None)
 
             # Play audio if requested
             if play:
-                subprocess.Popen(['afplay', str(output_path)])
+                subprocess.Popen(['afplay', actual_path])
                 status = "Speech generated and playing!"
             else:
                 status = "Speech generated successfully!"
 
             return [TextContent(
                 type="text",
-                text=f"{status}\n\nOutput file: {output_path}\n\nText: {text}"
+                text=f"{status}\n\nOutput file: {actual_path}\n\nText: {text}"
             )]
         except Exception as e:
             return [TextContent(
