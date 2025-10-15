@@ -4,7 +4,9 @@
       "Read(//Users/martin.suehowicz/**)",
       "Bash(git checkout:*)",
       "Bash(source:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(venv/bin/python:*)"
     ],
     "deny": [],
     "ask": []
