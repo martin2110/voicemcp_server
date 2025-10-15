@@ -180,8 +180,8 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         )]
 
 
-async def main():
-    """Main entry point for the server"""
+async def async_main():
+    """Async main entry point for the server"""
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         await app.run(
             read_stream,
@@ -190,5 +190,10 @@ async def main():
         )
 
 
+def main():
+    """Synchronous main entry point (for CLI)"""
+    asyncio.run(async_main())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

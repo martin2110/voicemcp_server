@@ -2,9 +2,8 @@
 """Direct test of TTS engine without MCP protocol"""
 import sys
 import asyncio
-sys.path.insert(0, 'src')
 
-from tts_engine import TTSEngine
+from elise_voice_server.tts_engine import TTSEngine
 
 async def main():
     print("Testing TTS engine directly...", file=sys.stderr)
