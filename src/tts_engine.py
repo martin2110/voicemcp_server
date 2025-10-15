@@ -4,6 +4,7 @@ Text-to-Speech engine using mlx-audio with voice cloning
 
 import os
 import sys
+import shutil
 from pathlib import Path
 import tempfile
 import soundfile as sf
@@ -59,7 +60,7 @@ class TTSEngine:
         print(f"Generating speech with Kokoro voice '{self.voice}'...", file=sys.stderr, flush=True)
 
         # Extract directory and filename
-        output_dir = output_file.parent
+        output_dir = output_file.parent.resolve()  # Get absolute path
         filename_without_ext = output_file.stem
 
         generate_audio(
@@ -68,13 +69,21 @@ class TTSEngine:
             voice=self.voice,
             lang_code="a",  # American English
             file_prefix=filename_without_ext,
-            output_path=str(output_dir),
+            output_path=".",  # mlx-audio has a bug and ignores this, always uses cwd
             audio_format="wav",
             sample_rate=24000,
             verbose=False
         )
 
-        return str(output_file)
+        # mlx-audio automatically appends _000 to the filename and saves in cwd
+        # We need to move it to the desired location
+        temp_file = Path(f"{filename_without_ext}_000.wav")
+        actual_output = output_dir / f"{filename_without_ext}_000.wav"
+
+        if temp_file.exists():
+            shutil.move(str(temp_file), str(actual_output))
+
+        return str(actual_output)
 
     def get_model_info(self) -> dict:
         """
