@@ -1,0 +1,24 @@
+[project]
+name = "elise-voice-mcp"
+version = "0.1.0"
+description = "MCP server for Elise voice synthesis using Hugging Face dataset"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=0.9.0",
+    "datasets>=2.14.0",
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+    "numpy>=1.24.0",
+    "soundfile>=0.12.0",
+    "edge-tts>=6.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
