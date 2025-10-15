@@ -14,10 +14,11 @@ class TTSEngine:
     """Handles text-to-speech generation using mlx-audio CSM with voice cloning"""
 
     def __init__(self):
-        # Initialize with CSM-1B model for voice cloning (optimized for Apple Silicon)
+        # Initialize with Kokoro-82M model (optimized for Apple Silicon, ungated)
         self.reference_audio = None
-        self.model_name = "mlx-community/csm-1b"
-        print("Using mlx-audio CSM-1B model (Apple Silicon optimized)", file=sys.stderr, flush=True)
+        self.model_name = "prince-canuma/Kokoro-82M"
+        self.voice = "af_heart"  # Default voice: AF Heart
+        print("Using mlx-audio Kokoro-82M model (Apple Silicon optimized)", file=sys.stderr, flush=True)
 
     def set_reference_audio(self, audio_data: dict):
         """
@@ -54,23 +55,14 @@ class TTSEngine:
         if reference_audio_data:
             self.set_reference_audio(reference_audio_data)
 
-        # Generate speech with mlx-audio
-        if self.reference_audio:
-            print(f"Generating speech with Elise voice cloning (mlx-audio)...", file=sys.stderr, flush=True)
-            generate_audio(
-                text=text,
-                model_path=self.model_name,
-                ref_audio=self.reference_audio,
-                output_path=str(output_file)
-            )
-        else:
-            # Without reference audio, use default CSM voice
-            print(f"Generating speech with default CSM voice...", file=sys.stderr, flush=True)
-            generate_audio(
-                text=text,
-                model_path=self.model_name,
-                output_path=str(output_file)
-            )
+        # Generate speech with mlx-audio Kokoro
+        print(f"Generating speech with Kokoro voice '{self.voice}'...", file=sys.stderr, flush=True)
+        generate_audio(
+            text=text,
+            model_path=self.model_name,
+            voice=self.voice,
+            output_path=str(output_file)
+        )
 
         return str(output_file)
 
