@@ -64,30 +64,35 @@ class TTSEngine:
         output_dir = output_file.parent.resolve()  # Get absolute path
         filename_without_ext = output_file.stem
 
-        # Suppress mlx-audio's stdout output (it prints colored text even with verbose=False)
-        # This breaks MCP JSON protocol, so we redirect to /dev/null
-        with open(os.devnull, 'w') as devnull:
-            with redirect_stdout(devnull):
-                generate_audio(
-                    text=text,
-                    model_path=self.model_name,
-                    voice=self.voice,
-                    lang_code="a",  # American English
-                    file_prefix=filename_without_ext,
-                    output_path=".",  # mlx-audio has a bug and ignores this, always uses cwd
-                    audio_format="wav",
-                    sample_rate=24000,
-                    verbose=False
-                )
+        # mlx-audio has a bug - it always writes to cwd, ignoring output_path
+        # We need to cd to the output directory before calling generate_audio
+        original_cwd = Path.cwd()
 
-        # mlx-audio automatically appends _000 to the filename and saves in cwd
-        # We need to move it to the desired location
-        temp_file = Path(f"{filename_without_ext}_000.wav")
+        try:
+            # Change to output directory so mlx-audio writes there
+            os.chdir(output_dir)
+
+            # Suppress mlx-audio's stdout output (it prints colored text even with verbose=False)
+            # This breaks MCP JSON protocol, so we redirect to /dev/null
+            with open(os.devnull, 'w') as devnull:
+                with redirect_stdout(devnull):
+                    generate_audio(
+                        text=text,
+                        model_path=self.model_name,
+                        voice=self.voice,
+                        lang_code="a",  # American English
+                        file_prefix=filename_without_ext,
+                        output_path=".",  # mlx-audio ignores this parameter
+                        audio_format="wav",
+                        sample_rate=24000,
+                        verbose=False
+                    )
+        finally:
+            # Always restore original working directory
+            os.chdir(original_cwd)
+
+        # mlx-audio automatically appends _000 to the filename
         actual_output = output_dir / f"{filename_without_ext}_000.wav"
-
-        if temp_file.exists():
-            shutil.move(str(temp_file), str(actual_output))
-
         return str(actual_output)
 
     def get_model_info(self) -> dict:

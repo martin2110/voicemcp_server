@@ -8,7 +8,8 @@
       "Bash(python:*)",
       "Bash(venv/bin/python:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(/bin/ls:*)"
     ],
     "deny": [],
     "ask": []
