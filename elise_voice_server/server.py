@@ -30,9 +30,15 @@ tts_engine: Optional[TTSEngine] = None
 
 def get_output_dir() -> Path:
     """Get or create output directory for generated audio files"""
-    # Use the project directory, not the cwd
-    output_dir = Path("/Users/martin.suehowicz/code/voicemcp_server/audio_output")
-    output_dir.mkdir(exist_ok=True)
+    # Use environment variable if set, otherwise use temp directory
+    if "ELISE_VOICE_OUTPUT_DIR" in os.environ:
+        output_dir = Path(os.environ["ELISE_VOICE_OUTPUT_DIR"])
+    else:
+        # Create a temporary directory that persists for the session
+        import tempfile
+        output_dir = Path(tempfile.gettempdir()) / "elise_voice_output"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
 
 

@@ -67,9 +67,22 @@ Attempts made:
 {
   "mcpServers": {
     "elise-voice": {
-      "command": "/Users/martin.suehowicz/code/voicemcp_server/venv/bin/python",
-      "args": ["/Users/martin.suehowicz/code/voicemcp_server/src/elise_voice_server.py"],
-      "cwd": "/Users/martin.suehowicz/code/voicemcp_server/src"
+      "command": "/path/to/voicemcp_server/venv/bin/python",
+      "args": [
+        "/path/to/voicemcp_server/elise_voice_server/server.py"
+      ],
+      "cwd": "/path/to/voicemcp_server"
+    }
+  }
+}
+```
+
+Or if installed via pipx/pip:
+```json
+{
+  "mcpServers": {
+    "elise-voice": {
+      "command": "elise-voice-mcp"
     }
   }
 }

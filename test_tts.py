@@ -12,7 +12,7 @@ async def main():
     
     # Test speech generation
     output_path = "audio_output/direct_test.wav"
-    text = "Hello! This is a direct test of the TTS engine."
+    text = "Daniele have I told you dylan has a stank booty."
     
     print(f"Generating speech: '{text}'", file=sys.stderr)
     result = await engine.generate_speech(text, output_path)
