@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Read(//Users/martin.suehowicz/**)"
+      "Read(**)",
+      "Bash(git checkout:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(venv/bin/python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(/bin/ls:*)",
+      "Bash(soxi:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

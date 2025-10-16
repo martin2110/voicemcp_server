@@ -1,16 +1,32 @@
 [project]
 name = "elise-voice-mcp"
-version = "0.1.0"
-description = "MCP server for Elise voice synthesis using Hugging Face dataset"
+version = "0.2.0"
+description = "MCP server for Elise voice TTS using mlx-audio Kokoro (Apple Silicon optimized)"
+readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Martin Suehowicz"}
+]
+keywords = ["mcp", "tts", "text-to-speech", "voice", "mlx", "apple-silicon"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Operating System :: MacOS :: MacOS X",
+]
+
 dependencies = [
     "mcp>=0.9.0",
     "datasets>=2.14.0",
-    "torch>=2.0.0",
-    "torchaudio>=2.0.0",
     "numpy>=1.24.0",
+    "mlx-audio>=0.2.5",
     "soundfile>=0.12.0",
-    "edge-tts>=6.1.0",
 ]
 
 [project.optional-dependencies]
@@ -19,6 +35,17 @@ dev = [
     "black>=23.0.0",
 ]
 
+[project.scripts]
+elise-voice-mcp = "elise_voice_server:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/elise-voice-mcp"
+Repository = "https://github.com/yourusername/elise-voice-mcp"
+Issues = "https://github.com/yourusername/elise-voice-mcp/issues"
+
 [build-system]
 requires = ["setuptools>=68.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["elise_voice_server"]

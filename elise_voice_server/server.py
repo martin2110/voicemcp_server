@@ -16,8 +16,8 @@ from mcp.server import Server
 from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
 import mcp.server.stdio
 
-from voice_dataset import EliseVoiceDataset
-from tts_engine import TTSEngine
+from .voice_dataset import EliseVoiceDataset
+from .tts_engine import TTSEngine
 
 
 # Initialize server
@@ -30,9 +30,15 @@ tts_engine: Optional[TTSEngine] = None
 
 def get_output_dir() -> Path:
     """Get or create output directory for generated audio files"""
-    # Use the project directory, not the cwd
-    output_dir = Path("/Users/martin.suehowicz/code/voicemcp_server/audio_output")
-    output_dir.mkdir(exist_ok=True)
+    # Use environment variable if set, otherwise use temp directory
+    if "ELISE_VOICE_OUTPUT_DIR" in os.environ:
+        output_dir = Path(os.environ["ELISE_VOICE_OUTPUT_DIR"])
+    else:
+        # Create a temporary directory that persists for the session
+        import tempfile
+        output_dir = Path(tempfile.gettempdir()) / "elise_voice_output"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
 
 
@@ -118,20 +124,28 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         output_path = output_dir / f"{filename}.wav"
 
         try:
-            # Generate speech (voice cloning disabled for now due to audio decoding issues)
-            # TODO: Re-enable voice cloning once torchcodec/ffmpeg linking is resolved
-            await tts_engine.generate_speech(text, str(output_path), reference_audio_data=None)
+            # Generate speech using default CSM voice
+            # TODO: Re-enable voice cloning once we solve audio loading without torchcodec
+            actual_path = await tts_engine.generate_speech(text, str(output_path), reference_audio_data=None)
 
             # Play audio if requested
             if play:
-                subprocess.Popen(['afplay', str(output_path)])
-                status = "Speech generated and playing!"
+                # actual_path may contain multiple files (comma-separated) for long text
+                audio_files = actual_path.split(',')
+                for audio_file in audio_files:
+                    # Use async subprocess to avoid blocking the event loop
+                    # This prevents timeouts while still playing sequentially
+                    process = await asyncio.create_subprocess_exec('afplay', audio_file)
+                    await process.wait()
+                    # Delete the file after playing
+                    Path(audio_file).unlink()
+                status = f"Speech generated and played! ({len(audio_files)} file(s))"
             else:
                 status = "Speech generated successfully!"
 
             return [TextContent(
                 type="text",
-                text=f"{status}\n\nOutput file: {output_path}\n\nText: {text}"
+                text=f"{status}\n\nOutput file(s): {actual_path}\n\nText: {text}"
             )]
         except Exception as e:
             return [TextContent(
@@ -172,8 +186,8 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         )]
 
 
-async def main():
-    """Main entry point for the server"""
+async def async_main():
+    """Async main entry point for the server"""
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         await app.run(
             read_stream,
@@ -182,5 +196,10 @@ async def main():
         )
 
 
+def main():
+    """Synchronous main entry point (for CLI)"""
+    asyncio.run(async_main())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

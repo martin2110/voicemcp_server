@@ -2,6 +2,7 @@
 Dataset loader for the Elise/Ceylia voice dataset from Hugging Face
 """
 
+import sys
 from typing import Dict, List, Any
 from datasets import load_dataset
 import numpy as np
@@ -17,10 +18,10 @@ class EliseVoiceDataset:
     async def load(self):
         """Load the dataset from Hugging Face"""
         if self.dataset is None:
-            print(f"Loading dataset {self.dataset_name}...")
+            print(f"Loading dataset {self.dataset_name}...", file=sys.stderr, flush=True)
             # Load in a non-blocking way
             self.dataset = load_dataset(self.dataset_name, split="train")
-            print(f"Dataset loaded: {len(self.dataset)} samples")
+            print(f"Dataset loaded: {len(self.dataset)} samples", file=sys.stderr, flush=True)
 
     def get_voice_characteristics(self) -> Dict[str, Any]:
         """

@@ -1,5 +1,5 @@
 mcp>=0.9.0
 datasets>=2.14.0
 numpy>=1.24.0
-TTS>=0.22.0
+mlx-audio>=0.2.5
 soundfile>=0.12.0
