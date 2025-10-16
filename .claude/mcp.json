@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "elise-voice": {
+      "command": "python",
+      "args": [
+        "-m",
+        "elise_voice_server"
+      ],
+      "env": {
+        "PYTHONPATH": "."
+      }
+    }
+  }
+}
