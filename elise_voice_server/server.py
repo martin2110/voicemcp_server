@@ -16,8 +16,8 @@ from mcp.server import Server
 from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
 import mcp.server.stdio
 
-from voice_dataset import EliseVoiceDataset
-from tts_engine import TTSEngine
+from .voice_dataset import EliseVoiceDataset
+from .tts_engine import TTSEngine
 
 
 # Initialize server
