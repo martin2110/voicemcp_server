@@ -7,6 +7,7 @@ Provides text-to-speech capabilities using the Elise/Ceylia voice dataset
 import asyncio
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Optional
 import base64
@@ -26,6 +27,25 @@ app = Server("elise-voice-server")
 # Global instances
 dataset: Optional[EliseVoiceDataset] = None
 tts_engine: Optional[TTSEngine] = None
+
+
+async def initialize_tts_engine():
+    """Pre-warm the TTS engine on server startup"""
+    global tts_engine
+    if tts_engine is None:
+        tts_engine = TTSEngine()
+        # Warm up by generating a tiny audio snippet to load the model
+        import tempfile
+        warmup_text = "Hi"
+        warmup_file = Path(tempfile.gettempdir()) / "warmup.wav"
+        try:
+            await tts_engine.generate_speech(warmup_text, str(warmup_file))
+            # Clean up warmup files
+            import glob
+            for f in glob.glob(str(warmup_file.parent / "warmup_*.wav")):
+                Path(f).unlink()
+        except Exception as e:
+            print(f"Warning: TTS warmup failed: {e}", file=sys.stderr, flush=True)
 
 
 def get_output_dir() -> Path:
@@ -100,11 +120,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """Handle tool calls"""
     global dataset, tts_engine
 
-    # Initialize on first use
-    if dataset is None:
-        dataset = EliseVoiceDataset()
-        await dataset.load()
+    # Initialize dataset only for tools that need it
+    if name in ["get_voice_info", "list_sample_texts"]:
+        if dataset is None:
+            dataset = EliseVoiceDataset()
+            await dataset.load()
 
+    # TTS engine should already be initialized from startup
     if tts_engine is None:
         tts_engine = TTSEngine()
 
@@ -128,21 +150,29 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             # TODO: Re-enable voice cloning once we solve audio loading without torchcodec
             actual_path = await tts_engine.generate_speech(text, str(output_path), reference_audio_data=None)
 
-            # Play audio if requested
+            # Play audio if requested - do it in background so we can return text immediately
             if play:
                 # actual_path may contain multiple files (comma-separated) for long text
                 audio_files = actual_path.split(',')
-                for audio_file in audio_files:
-                    # Use async subprocess to avoid blocking the event loop
-                    # This prevents timeouts while still playing sequentially
-                    process = await asyncio.create_subprocess_exec('afplay', audio_file)
-                    await process.wait()
-                    # Delete the file after playing
-                    Path(audio_file).unlink()
-                status = f"Speech generated and played! ({len(audio_files)} file(s))"
+
+                async def play_audio_files():
+                    """Background task to play audio files sequentially"""
+                    for audio_file in audio_files:
+                        try:
+                            process = await asyncio.create_subprocess_exec('afplay', audio_file)
+                            await process.wait()
+                            # Delete the file after playing
+                            Path(audio_file).unlink()
+                        except Exception as e:
+                            print(f"Error playing audio file {audio_file}: {e}", file=sys.stderr, flush=True)
+
+                # Start playback in background without waiting
+                asyncio.create_task(play_audio_files())
+                status = f"Speech generated and playing! ({len(audio_files)} file(s))"
             else:
                 status = "Speech generated successfully!"
 
+            # Return immediately while audio plays in background
             return [TextContent(
                 type="text",
                 text=f"{status}\n\nOutput file(s): {actual_path}\n\nText: {text}"
@@ -188,6 +218,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
 async def async_main():
     """Async main entry point for the server"""
+    # Pre-warm the TTS engine before accepting connections
+    await initialize_tts_engine()
+
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         await app.run(
             read_stream,

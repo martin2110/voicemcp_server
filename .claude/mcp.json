@@ -1,14 +1,12 @@
 {
   "mcpServers": {
     "elise-voice": {
-      "command": "python",
+      "command": "/Users/martin.suehowicz/code/voicemcp_server/venv/bin/python",
       "args": [
         "-m",
         "elise_voice_server"
       ],
-      "env": {
-        "PYTHONPATH": "."
-      }
+      "cwd": "/Users/martin.suehowicz/code/voicemcp_server"
     }
   }
 }
